@@ -1,0 +1,72 @@
+<mujoco model="arm">
+  <!-- Angles in radians for standard robotics kinematics -->
+  <compiler angle="radian" autolimits="true"/>
+
+  <!-- Zero-g by default so the arm stays in place for kinematic analysis; 
+       change to gravity="0 -9.81 0" if you want vertical gravity in the -Y direction -->
+  <option gravity="0 -9.81 0" timestep="0.002"/>
+
+  <!-- Bright, uniform lighting and clean frame scaling -->
+  <visual>
+    <headlight ambient="0.7 0.7 0.7" diffuse="0.3 0.3 0.3" specular="0.1 0.1 0.1"/>
+    <scale framelength="0.15" framewidth="0.008"/>
+  </visual>
+
+  <default>
+    <!-- Common properties for joints and link capsules -->
+    <joint type="hinge" axis="0 0 1" damping="0.5" range="-3.1416 3.1416"/>
+    <geom density="1000"/>
+  </default>
+
+  <worldbody>
+    <light pos="0 0 3" dir="0 0 -1" directional="true"/>
+
+    <!-- Top-down view camera looking straight onto the X-Y plane -->
+    <camera name="xy_plane_view" pos="0.5 0.5 1.8" xyaxes="1 0 0 0 1 0"/>
+    <camera name="xy_plane_view_zoom" pos="0.5 0.5 3.8" xyaxes="1 0 0 0 1 0"/>
+
+    <!-- Coordinate Axes Guides (X-axis in red, Y-axis in green) -->
+    <geom name="axis_x" type="capsule" fromto="0 0 0 1.2 0 0" size="0.004" rgba="0.9 0.2 0.2 0.6" contype="0" conaffinity="0"/>
+    <geom name="axis_y" type="capsule" fromto="0 0 0 0 1.2 0" size="0.004" rgba="0.2 0.8 0.2 0.6" contype="0" conaffinity="0"/>
+
+    <!-- Base Origin Pivot (at 0,0,0) -->
+    <geom name="base_pivot" type="cylinder" size="0.035 0.008" pos="0 0 0" rgba="0.9 0.9 0.9 1" contype="0" conaffinity="0"/>
+
+    <!-- ==================== LINK 1 (Length = 0.5) ==================== -->
+    <body name="link1" pos="0 0 0">
+      <!-- theta_1: revolute joint about the +Z axis -->
+      <joint name="joint1" pos="0 0 0"/>
+      <geom name="link1_geom" type="capsule" fromto="0 0 0 0.5 0 0" size="0.018" rgba="0.2 0.45 0.85 1"/>
+      <geom name="pivot2" type="cylinder" size="0.028 0.01" pos="0.5 0 0" rgba="0.9 0.9 0.9 1" contype="0" conaffinity="0"/>
+
+      <!-- ==================== LINK 2 (Length = 0.4) ==================== -->
+      <body name="link2" pos="0.5 0 0">
+        <!-- theta_2: revolute joint relative to Link 1 -->
+        <joint name="joint2" pos="0 0 0"/>
+        <geom name="link2_geom" type="capsule" fromto="0 0 0 0.4 0 0" size="0.016" rgba="0.25 0.6 0.9 1"/>
+        <geom name="end_effector" type="sphere" size="0.035" pos="0.4 0 0" rgba="0.1 0.1 0.1 1"/>
+        <!-- Site for easy tracking of end-effector coordinates in Python -->
+        <site name="ee_site" pos="0.4 0 0" size="0.01" rgba="1 0 0 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <!-- Joint torque motors for control -->
+    <!-- <motor name="motor1" joint="joint1" gear="1" ctrllimited="true" ctrlrange="-10 10"/>
+    <motor name="motor2" joint="joint2" gear="1" ctrllimited="true" ctrlrange="-10 10"/> -->
+    <position name="pos1" joint="joint1" kp="200" kv="17" ctrlrange="-3.1416 3.1416" forcerange="-10 10" />
+    <position name="pos2" joint="joint2" kp="50" kv="2.5" ctrlrange="-3.1416 3.1416" forcerange="-10 10" />
+  </actuator>
+
+  <sensor>
+    <!-- Position sensor to view X, Y, Z simultaneously via F4 -->
+    <framepos name="ee_pos" objtype="site" objname="ee_site"/>
+  </sensor>
+
+  <keyframe>
+    <!-- Default zero configuration: all links straight along +X -->
+    <key name="zero" qpos="0 0"/>
+    <key name="diagram_pose" qpos="0.785 0.523"/>
+  </keyframe>
+</mujoco>
